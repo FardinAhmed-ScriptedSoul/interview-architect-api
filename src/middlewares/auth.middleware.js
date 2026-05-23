@@ -1,53 +1,54 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/config.js');
 const userModel = require('../models/user.model.js');
+const blacklistModel = require('../models/blackList.model.js');
+const redisClient = require('../config/redis.js');
 
 async function authMiddleware(req, res, next) {
     try {
-        // 1. Extract token from secure HttpOnly Cookies
         let token = req.cookies?.token;
-
-        // Fallback option for standard Authorization Bearer header lines
         if (!token && req.headers.authorization?.startsWith("Bearer ")) {
             token = req.headers.authorization.split(" ")[1];
         }
 
         if (!token) {
-            return res.status(401).json({
-                status: "failed",
-                message: "Authentication failed: Missing secure session token token credentials."
-            });
+            return res.status(401).json({ status: "failed", message: "Access denied. Missing token." });
         }
 
-        // 2. Decode signature integrity against system secret keys
+        // =========================================================================
+        // 🛡️ THE BLACKLIST SCANNER LAYER (FAIL-FAST)
+        // =========================================================================
+        
+        // 🏃 STEP A: Query lightning-fast Redis RAM if active
+        if (redisClient && redisClient.isOpen) {
+            const isBlacklisted = await redisClient.get(`blacklist:${token}`);
+            if (isBlacklisted) {
+                return res.status(401).json({ status: "failed", message: "Session revoked. Token is invalid." });
+            }
+        } else {
+            // 💾 STEP B: Fallback gracefully to MongoDB disk index check
+            const isBlacklistedInDB = await blacklistModel.findOne({ token });
+            if (isBlacklistedInDB) {
+                return res.status(401).json({ status: "failed", message: "Session revoked. Token is invalid." });
+            }
+        }
+
+        // Decode token payload signatures
         const decoded = jwt.verify(token, config.jwt.secret);
-
-        // 3. Retrieve user profile and explicitly include tokenVersion for audit tracking
         const user = await userModel.findById(decoded._id).select("+tokenVersion");
-        if (!user) {
-            return res.status(401).json({
-                status: "failed",
-                message: "Authentication failed: Bound account no longer exists."
-            });
+        
+        if (!user || decoded.tokenVersion !== user.tokenVersion) {
+            return res.status(401).json({ status: "failed", message: "Session expired. Please re-authenticate." });
         }
 
-        // 🔒 4. Multi-Device Logout Enforcement Rule
-        // If tokenVersion in the JWT is less than the current DB version, the session is revoked.
-        if (decoded.tokenVersion !== user.tokenVersion) {
-            return res.status(401).json({
-                status: "failed",
-                message: "Session expired: Security state changed. Please re-authenticate."
-            });
-        }
-
-        // Attach verified user instance directly to the request cycle stream
         req.user = user;
+        req.token = token; // 💡 Attach the raw token string to the request for easy access in logout controllers
         next();
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({ status: "failed", message: "Session expired. Please log in again." });
         }
-        return res.status(401).json({ status: "failed", message: "Invalid token authentication signature payload." });
+        return res.status(401).json({ status: "failed", message: "Invalid authentication parameters." });
     }
 }
 

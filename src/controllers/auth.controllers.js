@@ -1,5 +1,9 @@
 const userModel = require('../models/user.model.js');
+const blacklistModel = require('../models/blackList.model.js');
+// const jwt = require('jsonwebtoken');
+// const config = require('../config/config.js');
 
+const redisClient = require('../config/redis.js');
 // Helper configurations for production-grade cookies
 const COOKIE_OPTIONS = {
     httpOnly: true, // Prevents XSS script execution reads
@@ -87,17 +91,38 @@ async function loginUserController(req, res, next) {
 
 /**
  * @controller logoutUserController
- * @description Clears single active authorization cookie profile session context
+ * @description Instantly invalidates token on both local RAM and permanent storage
  */
 async function logoutUserController(req, res, next) {
     try {
+        const token = req.token; // Pulled straight from updated authMiddleware
+        
+        // 📐 Calculate exact expiration delta to prevent bloating storage space
+        let remainingSeconds = 3600; // Default fallback to 1 hour
+        try {
+            const decoded = jwt.decode(token);
+            if (decoded && decoded.exp) {
+                remainingSeconds = decoded.exp - Math.floor(Date.now() / 1000);
+            }
+        } catch (e) { /* use fallback if decoding fails */ }
+
+        if (remainingSeconds > 0) {
+            // 1. If Redis is alive, cache it instantly to RAM
+            if (redisClient && redisClient.isOpen) {
+                await redisClient.set(`blacklist:${token}`, 'true', { EX: remainingSeconds });
+            }
+            
+            // 2. Always persist to MongoDB TTL index collection as a reliable source of truth
+            const expiresAtDate = new Date(Date.now() + remainingSeconds * 1000);
+            await blacklistModel.create({ token, expiresAt: expiresAtDate }).catch(() => {
+                // Catch silent duplicate entries gracefully
+            });
+        }
+
         return res
             .status(200)
             .clearCookie("token", { ...COOKIE_OPTIONS, maxAge: 0 })
-            .json({
-                status: "success",
-                message: "Logged out cleanly from current device session."
-            });
+            .json({ status: "success", message: "Logged out completely and securely." });
     } catch (error) {
         next(error);
     }
@@ -105,25 +130,30 @@ async function logoutUserController(req, res, next) {
 
 /**
  * @controller logoutFromAllDevicesController
- * @description Atomically increments user token version to invalidate all active tokens globally
+ * @description High-security cross-cutting concern: increments tokenVersion, invalidating all issued tokens
  */
 async function logoutFromAllDevicesController(req, res, next) {
     try {
-        // Enforce atomic integer increment on the specific account context layer
+        // Increment the atomic version counter on the user document
         await userModel.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+
+        // Blacklist the current token immediately for extra protection
+        const token = req.token;
+        if (token) {
+            if (redisClient && redisClient.isOpen) {
+                await redisClient.set(`blacklist:${token}`, 'true', { EX: 3600 });
+            }
+            await blacklistModel.create({ token, expiresAt: new Date(Date.now() + 3600 * 1000) }).catch(() => {});
+        }
 
         return res
             .status(200)
             .clearCookie("token", { ...COOKIE_OPTIONS, maxAge: 0 })
-            .json({
-                status: "success",
-                message: "Global account clearance complete. Logged out of all devices successfully."
-            });
+            .json({ status: "success", message: "Global authorization revoked. Logged out of all devices." });
     } catch (error) {
         next(error);
     }
 }
-
 module.exports = {
     registerUserController,
     loginUserController,
