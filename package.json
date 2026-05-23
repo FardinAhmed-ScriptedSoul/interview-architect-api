@@ -1,0 +1,33 @@
+{
+  "name": "interview-architect-api",
+  "version": "1.0.0",
+  "description": "An AI-powered system-engineered career acceleration platform built using Node.js, Express, React, MongoDB, and the Google Gemini AI Pro engine.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FardinAhmed-ScriptedSoul/interview-architect-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/FardinAhmed-ScriptedSoul/interview-architect-api/issues"
+  },
+  "homepage": "https://github.com/FardinAhmed-ScriptedSoul/interview-architect-api#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.2",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.14"
+  }
+}
