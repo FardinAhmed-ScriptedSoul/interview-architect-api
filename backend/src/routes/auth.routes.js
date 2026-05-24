@@ -38,5 +38,13 @@ authRouter.post("/logout",authMiddleware,authControllers.logoutUserController)
 authRouter.post("/logout-all",authMiddleware,authControllers.logoutFromAllDevicesController)
 
 
+/**
+ * @route GET /api/auth/get-me
+ * @description get the current logged in user
+ * @access private
+ */
+
+authRouter.get("/get-me",authMiddleware,authControllers.getMe)
+
 
 module.exports = authRouter

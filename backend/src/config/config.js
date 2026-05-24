@@ -19,7 +19,8 @@ const config = {
     },
     redis: {
         uri: process.env.REDIS_URI || null
-    }
+    },
+    GOOGLE_GEN_API_KEY:process.env.GOOGLE_GEN_API_KEY
 };
 
 Object.freeze(config);

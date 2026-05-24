@@ -14,3 +14,23 @@ THE BLACKLIST CHECK
                   YES                NO
                   /                    \
   💥 Reject Request (401)         🟢 Accept & Pass to next()
+
+
+  #frontend
+
+  4 layer architecture
+
+  UI
+  =>component
+  =>pages
+
+  HOOK => for managing state and api layers
+  => hooks
+
+  State
+  => auth.context.jsx
+  =>ai.context.jsx
+
+  API => for communication with backend
+  => services
+    => auth.api.js

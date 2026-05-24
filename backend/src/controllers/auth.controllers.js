@@ -5,10 +5,14 @@ const blacklistModel = require('../models/blackList.model.js');
 
 const redisClient = require('../config/redis.js');
 // Helper configurations for production-grade cookies
+// Helper configurations with forced cross-origin support for GitHub Codespaces cloud environments
 const COOKIE_OPTIONS = {
     httpOnly: true, // Prevents XSS script execution reads
-    secure: process.env.NODE_ENV === 'production', // Forces SSL encryption transmission
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Required cross-origin support for cloud setups
+    
+    
+    secure: true,   
+    sameSite: 'none', 
+    
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 Days active life span
 };
 
@@ -154,9 +158,40 @@ async function logoutFromAllDevicesController(req, res, next) {
         next(error);
     }
 }
+
+/**
+ * @controller getMe
+ * @description Fetches profile information of the currently logged-in user
+ * @access Private (Requires valid authMiddleware session)
+ */
+/**
+ * @controller getMe
+ * @description Fetches profile information of the currently logged-in user
+ * @access Private (Requires valid authMiddleware session)
+ */
+async function getMe(req, res, next) {
+    try {
+        // 💡 Original simple blueprint execution
+        const user = req.user;
+
+        return res.status(200).json({
+            status: "success",
+            message: "User profile retrieved successfully.",
+            data: {
+                id: user._id,
+                userName: user.userName,
+                email: user.email,
+                createdAt: user.createdAt
+            }
+        });
+    } catch (error) {
+        next(error); 
+    }
+}
 module.exports = {
     registerUserController,
     loginUserController,
     logoutUserController,
-    logoutFromAllDevicesController
+    logoutFromAllDevicesController,
+    getMe
 };

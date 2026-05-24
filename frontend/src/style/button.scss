@@ -1,0 +1,27 @@
+// src/style/button.scss
+.button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+}
+
+.primary-button {
+    background-color: #d20d3b;
+    color: #fff;
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+
+    &:hover {
+        opacity: 0.85;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
