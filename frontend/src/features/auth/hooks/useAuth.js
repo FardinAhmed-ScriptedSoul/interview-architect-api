@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 // 🟢 FIXED: Stepping back one level, then diving into the services directory
 import { AuthContext } from "../auth.context.jsx";
-import { login, register, logout, getMe } from "../services/auth.api";
+import { login, register, logout, getMe, logoutAll } from "../services/auth.api";
 
 export const useAuth = () => {
     const context = useContext(AuthContext)
@@ -49,6 +49,18 @@ export const useAuth = () => {
         }
     }
 
+    const handleLogoutAll = async () =>{
+        setLoading(true)
+        try{
+            await logoutAll()
+            setUser(null)
+        }catch(err){
+            console.error(err)
+        }finally{
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
         const getAndSetUser = async () => {
             try {
@@ -65,5 +77,5 @@ export const useAuth = () => {
         getAndSetUser()
     }, [])
 
-    return { user, loading, handleRegister, handleLogin, handleLogout }
+    return { user, loading, handleRegister, handleLogin, handleLogout , handleLogoutAll}
 }

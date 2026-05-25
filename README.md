@@ -34,3 +34,6 @@ THE BLACKLIST CHECK
   API => for communication with backend
   => services
     => auth.api.js
+
+#frontend routing
+main.jsx → RouterProvider → app.routes.jsx → pages.

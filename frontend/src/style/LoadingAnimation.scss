@@ -1,0 +1,138 @@
+// src/style/LoadingAnimation.scss
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    gap: 2rem;
+
+    &__logo {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #fff;
+        opacity: 0;
+        animation: fadeSlideUp 0.6s ease 0.2s forwards;
+
+        span {
+            color: #d20d3b;
+        }
+    }
+
+    &__spinner {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        opacity: 0;
+        animation: fadeSlideUp 0.6s ease 0.4s forwards;
+
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+
+        &::before {
+            border-top-color: #d20d3b;
+            animation: spin 0.9s linear infinite;
+        }
+
+        &::after {
+            inset: 8px;
+            border-top-color: rgba(210, 13, 59, 0.35);
+            animation: spin 1.4s linear infinite reverse;
+        }
+    }
+
+    &__text {
+        font-size: 0.78rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.35);
+        opacity: 0;
+        animation: fadeSlideUp 0.6s ease 0.6s forwards;
+    }
+
+    &__bar {
+        width: 160px;
+        height: 2px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 2px;
+        overflow: hidden;
+        opacity: 0;
+        animation: fadeSlideUp 0.6s ease 0.7s forwards;
+
+        &-fill {
+            height: 100%;
+            width: 0%;
+            background: #d20d3b;
+            border-radius: 2px;
+            animation: barFill 2.2s ease 0.8s forwards;
+        }
+    }
+}
+
+// Page-level loading (inside pages, not full screen)
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+
+    h1 {
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.4);
+    }
+
+    .inline-spinner {
+        width: 40px;
+        height: 40px;
+        position: relative;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: #d20d3b;
+            animation: spin 0.9s linear infinite;
+        }
+    }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes barFill {
+    0%   { width: 0%; }
+    60%  { width: 75%; }
+    85%  { width: 90%; }
+    100% { width: 100%; }
+}

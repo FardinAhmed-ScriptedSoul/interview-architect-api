@@ -14,20 +14,55 @@ $info-bg:        #1b2a4a;
 $info-border:    #2d4a7a;
 $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+// ── App Layout (sidebar + main) ───────────────────────────────────────────────
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background: $bg-page;
+}
+
 // ── Page Shell ───────────────────────────────────────────────────────────────
 .home-page {
-    width: 100%;
+    flex: 1;
     min-height: 100vh;
     background-color: $bg-page;
     color: $text-primary;
     font-family: $font-stack;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 3rem 1.5rem;
     gap: 2rem;
+    overflow-y: auto;
+}
+
+// ── Light Mode Overrides ──────────────────────────────────────────────────────
+body.light-mode {
+    background: #f4f4f4;
+    color: #111;
+
+    .app-layout        { background: #f4f4f4; }
+    .home-page         { background: #f4f4f4; color: #111; }
+    .interview-card    { background: #fff; border-color: rgba(0,0,0,0.08); }
+    .panel__textarea   { background: #fafafa; color: #111; border-color: rgba(0,0,0,0.1); }
+    .dropzone          { background: #fafafa; border-color: rgba(0,0,0,0.12); }
+    .page-header p     { color: #666; }
+    .char-counter      { color: #999; }
+    .recent-reports h2 { color: #111; }
+    .report-item       { background: #fff; border-color: rgba(0,0,0,0.08); }
+    .report-item h3    { color: #111; }
+    .report-meta       { color: #888; }
+    .page-footer a     { color: #999; }
+    .footer-info       { color: #999; }
+    .info-box          { background: #e8f0ff; border-color: #b3ccff; }
+    .info-box p        { color: #3366cc; }
+    .or-divider        { color: #aaa; }
+    .panel__header h2  { color: #111; }
+    .section-label     { color: #333; }
+    .interview-card__footer { border-top-color: rgba(0,0,0,0.08); }
+    .panel-divider     { background-color: rgba(0,0,0,0.08); }
+    .loading-screen h1 { color: #999; }
 }
 
 // ── Page Header ──────────────────────────────────────────────────────────────
@@ -49,9 +84,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         line-height: 1.6;
     }
 
-    .highlight {
-        color: $accent;
-    }
+    .highlight { color: $accent; }
 }
 
 // ── Main Card ─────────────────────────────────────────────────────────────────
@@ -131,13 +164,8 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         transition: border-color 0.2s;
         line-height: 1.5;
 
-        &::placeholder {
-            color: $text-muted;
-        }
-
-        &:focus {
-            border-color: $accent;
-        }
+        &::placeholder { color: $text-muted; }
+        &:focus { border-color: $accent; }
 
         &--short {
             flex: unset;
@@ -157,9 +185,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         }
     }
 
-    &--right {
-        gap: 0.75rem;
-    }
+    &--right { gap: 0.75rem; }
 }
 
 // ── Badges ────────────────────────────────────────────────────────────────────
@@ -220,23 +246,9 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         background-color: rgba($accent, 0.05);
     }
 
-    &__icon {
-        color: $accent;
-        margin-bottom: 0.25rem;
-    }
-
-    &__title {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: $text-primary;
-        margin: 0;
-    }
-
-    &__subtitle {
-        font-size: 0.75rem;
-        color: $text-muted;
-        margin: 0;
-    }
+    &__icon   { color: $accent; margin-bottom: 0.25rem; }
+    &__title  { font-size: 0.875rem; font-weight: 500; color: $text-primary; margin: 0; }
+    &__subtitle { font-size: 0.75rem; color: $text-muted; margin: 0; }
 }
 
 // ── OR Divider ────────────────────────────────────────────────────────────────
@@ -247,17 +259,14 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     color: $text-muted;
     font-size: 0.75rem;
 
-    &::before,
-    &::after {
+    &::before, &::after {
         content: '';
         flex: 1;
         height: 1px;
         background-color: $border-color;
     }
 
-    span {
-        white-space: nowrap;
-    }
+    span { white-space: nowrap; }
 }
 
 // ── Self Description ──────────────────────────────────────────────────────────
@@ -277,11 +286,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     border: 1px solid $info-border;
     border-radius: 0.5rem;
 
-    &__icon {
-        flex-shrink: 0;
-        color: #4a90e2;
-        margin-top: 1px;
-    }
+    &__icon { flex-shrink: 0; color: #4a90e2; margin-top: 1px; }
 
     p {
         margin: 0;
@@ -289,9 +294,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         color: #8ab4f8;
         line-height: 1.5;
 
-        strong {
-            color: $text-primary;
-        }
+        strong { color: $text-primary; }
     }
 }
 
@@ -301,7 +304,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, $accent 0%, darken($accent, 10%) 100%);
+    background: linear-gradient(135deg, $accent 0%, #cc2460 100%);
     color: #fff;
     font-size: 0.9rem;
     font-weight: 600;
@@ -311,49 +314,92 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     transition: opacity 0.2s, transform 0.1s;
     font-family: $font-stack;
 
-    &:hover {
-        opacity: 0.9;
-    }
-
-    &:active {
-        transform: scale(0.98);
-    }
+    &:hover   { opacity: 0.9; }
+    &:active  { transform: scale(0.98); }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
-.recent-reports{
+// ── Recent Reports ────────────────────────────────────────────────────────────
+.recent-reports {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     width: 100%;
     max-width: 900px;
 
-    .reports-list{
+    h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: $text-primary;
+    }
+
+    .reports-list {
         display: flex;
         gap: 0.75rem;
         flex-wrap: wrap;
 
-        .report-item{
+        .report-item {
             background-color: $bg-card;
             border: 1px solid $border-color;
             border-radius: 0.5rem;
             padding: 1rem;
             flex: 1;
+            min-width: 200px;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
             cursor: pointer;
-            flex-shrink: 0;
+            transition: border-color 0.2s, background 0.2s;
+
+            &:hover {
+                border-color: $accent;
+                background: rgba($accent, 0.04);
+            }
+
+            h3 {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: $text-primary;
+                margin: 0;
+            }
+
+            .report-meta {
+                font-size: 0.75rem;
+                color: $text-muted;
+                margin: 0;
+            }
 
             .match-score {
                 font-size: 0.8rem;
                 font-weight: 600;
-                color: $accent;
-                align-items: flex-start;
+
+                &.score--high { color: #4ade80; }
+                &.score--mid  { color: #fbbf24; }
+                &.score--low  { color: $accent; }
             }
         }
     }
 }
 
+// ── Loading screen (inline, not full overlay) ─────────────────────────────────
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 60vh;
+    gap: 1.2rem;
+
+    h1 {
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.35);
+        margin: 0;
+    }
+}
 
 // ── Page Footer ───────────────────────────────────────────────────────────────
 .page-footer {
@@ -366,8 +412,6 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         text-decoration: none;
         transition: color 0.2s;
 
-        &:hover {
-            color: $text-primary;
-        }
+        &:hover { color: $text-primary; }
     }
 }

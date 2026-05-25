@@ -20,6 +20,7 @@ $severity-low: #3fb950;
 
 // ── Page Shell ────────────────────────────────────────────────────────────────
 .interview-page {
+    flex: 1;           
     width: 100%;
     min-height: 100vh;
     background-color: $bg-page;
@@ -29,6 +30,7 @@ $severity-low: #3fb950;
     align-items: stretch;
     padding: 1.5rem;
     box-sizing: border-box;
+    overflow-x: hidden; 
 }
 
 // ── 3-Column Layout ───────────────────────────────────────────────────────────
@@ -172,7 +174,7 @@ $severity-low: #3fb950;
     transition: border-color 0.2s;
 
     &:hover {
-        border-color: lighten($border-color, 8%);
+        border-color: #3a4560;
     }
 
     &__header {
@@ -234,7 +236,7 @@ $severity-low: #3fb950;
         p {
             margin: 0;
             font-size: 0.835rem;
-            color: lighten($text-muted, 15%);
+            color: #a8b3be;
             line-height: 1.6;
         }
     }
@@ -338,7 +340,7 @@ $severity-low: #3fb950;
             align-items: flex-start;
             gap: 0.5rem;
             font-size: 0.845rem;
-            color: lighten($text-muted, 12%);
+            color: #9ba6b0;
             line-height: 1.5;
         }
     }
@@ -475,5 +477,52 @@ $severity-low: #3fb950;
         color: $severity-low;
         background-color: rgba($severity-low, 0.1);
         border-color: rgba($severity-low, 0.25);
+    }
+}
+
+
+// ✅ ADD these to interview.scss
+
+.interview-nav__back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.45);
+    background: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+
+    &:hover {
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.8);
+    }
+}
+
+.interview-nav__share {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    background: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.25s ease-in-out; // ✅ updated timing
+
+    &:hover {
+        background: rgba(245, 230, 180, 0.07);        // ✅ pale yellow tint
+        color: rgba(245, 230, 180, 0.85);              // ✅ warm pale yellow text
+        border-color: rgba(245, 230, 180, 0.2);        // ✅ matching border glow
+        box-shadow: 0 0 10px rgba(245, 220, 150, 0.08); // ✅ soft outer glow
     }
 }

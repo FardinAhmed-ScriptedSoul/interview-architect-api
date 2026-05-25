@@ -1,11 +1,22 @@
 require('dotenv').config();
 
+// 🚨 Core System Configuration Validation Guards
 if (!process.env.MONGODB_URI) {
     console.error("❌ FATAL CONFIGURATION ERROR: MONGODB_URI is required but missing from environment variables.");
     process.exit(1);
 }
 if (!process.env.JWT_SECRET) {
     console.error("❌ FATAL CONFIGURATION ERROR: JWT_SECRET is required but missing.");
+    process.exit(1);
+}
+
+// 📧 Mail Infrastructure Configuration Validation Guards
+// 🟢 FIXED: Updated array elements to check for GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+const requiredMailEnvVars = ['EMAIL_USER', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'REFRESH_TOKEN'];
+const missingMailVars = requiredMailEnvVars.filter(key => !process.env[key]);
+
+if (missingMailVars.length > 0) {
+    console.error(`❌ FATAL CONFIGURATION ERROR: Mail service variables missing: ${missingMailVars.join(', ')}`);
     process.exit(1);
 }
 
@@ -20,7 +31,15 @@ const config = {
     redis: {
         uri: process.env.REDIS_URI || null
     },
-    GOOGLE_GEN_API_KEY:process.env.GOOGLE_GEN_API_KEY
+    google: {
+        genApiKey: process.env.GOOGLE_GEN_API_KEY || null
+    },
+    mail: {
+        user: process.env.EMAIL_USER,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.REFRESH_TOKEN
+    }
 };
 
 Object.freeze(config);

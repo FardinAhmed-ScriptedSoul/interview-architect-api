@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-
+const morgan = require('morgan');
 
 const app = express();
 
@@ -9,8 +9,19 @@ const app = express();
 // 🛠️ CORE MIDDLEWARES
 // ==========================================
 app.use(cors({
-    origin: 'https://glowing-space-computing-machine-pj649v65rqjqc674-5173.app.github.dev', 
-    credentials: true, 
+    origin: function (origin, callback) {
+        if (
+            !origin ||
+            /^https?:\/\/.*\.app\.github\.dev$/.test(origin) ||  // ✅ http & https codespace
+            /^https?:\/\/localhost:\d+$/.test(origin) ||          // ✅ localhost
+            /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin)         // ✅ 127.0.0.1 — THIS was missing
+        ) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS blocked: ${origin}`));
+        }
+    },
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -18,7 +29,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(morgan('dev'));
 // ==========================================
 // 🗺️ ROUTE BINDINGS
 // ==========================================
