@@ -4,6 +4,10 @@ const userModel = require('../models/user.model.js');
 const blacklistModel = require('../models/blackList.model.js');
 const redisClient = require('../config/redis.js');
 
+/**
+ * 🔒 Central Authentication & Session Validation Middleware
+ * Validates active tokens across Memory Caches (Redis), Database Fallbacks, and Rotation Layers.
+ */
 async function authMiddleware(req, res, next) {
     try {
         let token = req.cookies?.token;
@@ -52,4 +56,8 @@ async function authMiddleware(req, res, next) {
     }
 }
 
-module.exports = { authMiddleware };
+// 🛡️ Safe Export Pattern: Assigns the primary function directly to the export block
+// This guarantees that if it is called directly OR destructured, Express always receives a valid function.
+authMiddleware.authMiddleware = authMiddleware;
+
+module.exports = authMiddleware;

@@ -11,7 +11,6 @@ if (!process.env.JWT_SECRET) {
 }
 
 // 📧 Mail Infrastructure Configuration Validation Guards
-// 🟢 FIXED: Updated array elements to check for GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 const requiredMailEnvVars = ['EMAIL_USER', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'REFRESH_TOKEN'];
 const missingMailVars = requiredMailEnvVars.filter(key => !process.env[key]);
 
@@ -23,13 +22,15 @@ if (missingMailVars.length > 0) {
 const config = {
     env: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3000,
-    db: { uri: process.env.MONGODB_URI },
+    db: { 
+        uri: process.env.MONGODB_URI 
+    },
     jwt: {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXPIRES_IN || '7d'
     },
     redis: {
-        uri: process.env.REDIS_URI || null
+        uri: process.env.REDIS_URL || null
     },
     google: {
         genApiKey: process.env.GOOGLE_GEN_API_KEY || null

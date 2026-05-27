@@ -1,12 +1,39 @@
 const config = require('../config/config.js');
 const { GoogleGenAI } = require("@google/genai");
 
-const ai = new GoogleGenAI({
-    apiKey: config.GOOGLE_GEN_API_KEY
+const ai = new GoogleGenAI({ 
+    apiKey: config.google.genApiKey || process.env.GOOGLE_GEN_API_KEY 
 });
 
-async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
+/**
+ * Helper function to safely extract text from the @google/genai response object
+ */
+function extractRawText(response) {
+    if (!response) return "";
+    if (typeof response.text === 'function') return response.text().trim();
+    if (typeof response.text === 'string') return response.text.trim();
+    if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return response.candidates[0].content.parts[0].text.trim();
+    }
+    return "";
+}
 
+/**
+ * Helper function to format errors consistently for the Express error middleware
+ */
+function handleAiError(error, contextMessage) {
+    console.error(`💥 ${contextMessage}:`, error.message || error);
+    
+    // Check for explicit 429 rate limits from Google's API
+    if (error.status === 429 || error.statusCode === 429 || error.message?.includes('429')) {
+        const quotaError = new Error("API_QUOTA_EXHAUSTED");
+        quotaError.status = 429;
+        throw quotaError;
+    }
+    throw error;
+}
+
+async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
     const promptText = `
         You are a principal technical interviewer evaluating a candidate profile against a targeted job specification.
         
@@ -43,55 +70,55 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
-                    type: "OBJECT",
+                    type: "object",
                     properties: {
-                        title: { type: "STRING" },
-                        matchScore: { type: "INTEGER" },
+                        title: { type: "string" },
+                        matchScore: { type: "integer" },
                         technicalQuestions: {
-                            type: "ARRAY",
+                            type: "array",
                             items: {
-                                type: "OBJECT",
+                                type: "object",
                                 properties: {
-                                    question: { type: "STRING" },
-                                    intention: { type: "STRING" },
-                                    answer: { type: "STRING" }
+                                    question: { type: "string" },
+                                    intention: { type: "string" },
+                                    answer: { type: "string" }
                                 },
                                 required: ["question", "intention", "answer"]
                             }
                         },
                         behavioralQuestions: {
-                            type: "ARRAY",
+                            type: "array",
                             items: {
-                                type: "OBJECT",
+                                type: "object",
                                 properties: {
-                                    question: { type: "STRING" },
-                                    intention: { type: "STRING" },
-                                    answer: { type: "STRING" }
+                                    question: { type: "string" },
+                                    intention: { type: "string" },
+                                    answer: { type: "string" }
                                 },
                                 required: ["question", "intention", "answer"]
                             }
                         },
                         skillGaps: {
-                            type: "ARRAY",
+                            type: "array",
                             items: {
-                                type: "OBJECT",
+                                type: "object",
                                 properties: {
-                                    skill: { type: "STRING" },
-                                    severity: { type: "STRING", enum: ["low", "medium", "high"] }
+                                    skill: { type: "string" },
+                                    severity: { type: "string", enum: ["low", "medium", "high"] }
                                 },
                                 required: ["skill", "severity"]
                             }
                         },
                         preparationPlan: {
-                            type: "ARRAY",
+                            type: "array",
                             items: {
-                                type: "OBJECT",
+                                type: "object",
                                 properties: {
-                                    day: { type: "STRING" },
-                                    focus: { type: "STRING" },
+                                    day: { type: "string" },
+                                    focus: { type: "string" },
                                     tasks: {
-                                        type: "ARRAY",
-                                        items: { type: "STRING" }
+                                        type: "array",
+                                        items: { type: "string" }
                                     }
                                 },
                                 required: ["day", "focus", "tasks"]
@@ -103,19 +130,13 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
             }
         });
 
-        let rawText = response.text.trim();
-        
-        // Clean away any markdown formatting noise
+        let rawText = extractRawText(response);
+        if (!rawText) throw new Error("Gemini returned an empty raw text payload.");
+
         rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-
-        if (!rawText.startsWith('{') || !rawText.endsWith('}')) {
-            throw new Error("Gemini returned an incomplete or truncated JSON response payload.");
-        }
-
         const rawReport = JSON.parse(rawText);
 
-        // 🟢 SANITATION LAYER: Explicitly map fields to strip extra keys and guarantee type arrays
-        const cleanReport = {
+        return {
             title: rawReport.title || "Backend Engineer",
             matchScore: typeof rawReport.matchScore === 'number' ? rawReport.matchScore : 80,
             technicalQuestions: Array.isArray(rawReport.technicalQuestions) 
@@ -149,12 +170,226 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
                 : []
         };
 
-        return cleanReport;
-
     } catch (error) {
-        console.error("💥 Gemini Schema Structuring Failure:", error);
-        throw error;
+        handleAiError(error, "Gemini Schema Structuring Failure");
     }
 }
 
-module.exports = generateInterviewReport;
+async function generateTailoredResume({ resume, jobDescription, selfDescription }) {
+    const promptText = `
+        You are an expert ATS resume writer and career coach.
+        Your task: Rewrite and tailor the candidate's resume specifically for the target job.
+
+        [TARGET JOB DESCRIPTION]:
+        ${jobDescription}
+
+        [CANDIDATE RESUME / PROFILE]:
+        ${resume}
+
+        [CANDIDATE SELF DESCRIPTION]:
+        ${selfDescription || 'Not provided'}
+
+        CRITICAL INSTRUCTIONS:
+        - Extract real information from the resume — do NOT invent fake experience or companies
+        - Tailor the summary and bullet points to mirror the job description language
+        - Prioritize skills and experience most relevant to the target role
+        - Use strong action verbs and quantify achievements wherever possible
+        - Make every bullet point ATS-friendly by naturally including job keywords
+        - If phone/location/linkedin/github are not in the resume, return empty string
+        - Return ONLY valid JSON matching the schema exactly, no extra commentary
+    `;
+
+    const rawSchema = {
+        type: "object",
+        properties: {
+            fullName:  { type: "string" },
+            email:     { type: "string" },
+            phone:     { type: "string" },
+            location:  { type: "string" },
+            linkedin:  { type: "string" },
+            github:    { type: "string" },
+            summary:   { type: "string" },
+            skills: {
+                type: "array",
+                items: { type: "string" }
+            },
+            experience: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        title:    { type: "string" },
+                        company:  { type: "string" },
+                        duration: { type: "string" },
+                        bullets: {
+                            type: "array",
+                            items: { type: "string" }
+                        }
+                    },
+                    required: ["title", "company", "duration", "bullets"]
+                }
+            },
+            education: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        degree:      { type: "string" },
+                        institution: { type: "string" },
+                        year:        { type: "string" }
+                    },
+                    required: ["degree", "institution", "year"]
+                }
+            },
+            projects: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        name:    { type: "string" },
+                        tech:    { type: "string" },
+                        bullets: {
+                            type: "array",
+                            items: { type: "string" }
+                        }
+                    },
+                    required: ["name", "tech", "bullets"]
+                }
+            }
+        },
+        required: ["fullName", "email", "summary", "skills", "experience", "education", "projects"]
+    };
+
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    let lastError = null;
+
+    for (const model of models) {
+        try {
+            console.log(`🤖 Trying model: ${model}`);
+
+            const response = await ai.models.generateContent({
+                model,
+                contents: promptText,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: rawSchema
+                }
+            });
+
+            let rawText = extractRawText(response);
+            if (!rawText) throw new Error("AI returned empty response.");
+
+            rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+            const parsedData = JSON.parse(rawText);
+
+            if (!parsedData || Object.keys(parsedData).length === 0 || (!parsedData.fullName && !parsedData.summary)) {
+                throw new Error("AI returned empty context layout wrapper.");
+            }
+
+            console.log(`✅ Resume data generated perfectly for: ${parsedData.fullName}`);
+            return parsedData;
+
+        } catch (error) {
+            lastError = error;
+            if (error.status === 429 || error.statusCode === 429 || error.message?.includes('429')) {
+                console.warn(`⚠️ ${model} quota exhausted, trying next fallback...`);
+                continue;
+            }
+            console.error(`💥 Non-quota error with ${model}:`, error.message || error);
+        }
+    }
+
+    handleAiError(lastError || new Error("All AI models exhausted."), "Resume Generation Cascade Loop Failed");
+}
+
+async function generatePracticeQuestions(topic) {
+    try {
+        const prompt = `You are an elite Lead Backend Engineer conducting a technical interview.
+Generate exactly 3 deep-dive technical interview questions focusing specifically on the topic: "${topic}".
+Each question must target core architectural patterns, execution environments, or advanced optimization engineering principles.`;
+
+        const responseSchema = {
+            type: "object",
+            properties: {
+                topic: { type: "string" },
+                questions: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            questionId: { type: "string", description: "A unique short tag string, e.g., 'q1', 'q2'" },
+                            question: { type: "string" },
+                            intent: { type: "string", description: "What core optimization or mechanics concept does this question evaluate?" },
+                            idealAnswerCore: { type: "string", description: "Brief overview of what a candidate must highlight to earn full marks." }
+                        },
+                        required: ["questionId", "question", "intent", "idealAnswerCore"]
+                    }
+                }
+            },
+            required: ["topic", "questions"]
+        };
+
+        const result = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: responseSchema,
+            },
+        });
+
+        const textOut = extractRawText(result);
+        if (!textOut) throw new Error("Gemini returned an empty questions payload.");
+
+        return JSON.parse(textOut.trim());
+    } catch (error) {
+        handleAiError(error, "AI Service Error Generating Practice Questions");
+    }
+}
+
+async function gradePracticeAnswer({ topic, question, intent, candidateAnswer }) {
+    try {
+        const prompt = `You are an expert technical interviewer evaluating an engineering candidate's response.
+Topic: ${topic}
+Question Asked: ${question}
+Core Concept Being Evaluated: ${intent}
+Candidate's Typed Submission: "${candidateAnswer}"
+
+Analyze the correctness, vocabulary accuracy, and depth of the response. Grade it strictly on a scale from 0 to 100.`;
+
+        const responseSchema = {
+            type: "object",
+            properties: {
+                score: { type: "number", description: "Score from 0 to 100 based on accuracy and technical depth." },
+                verdict: { type: "string", description: "Brief evaluation tag summary, e.g., 'Strong Pass', 'Partial Alignment', 'Gaps Present'" },
+                critique: { type: "string", description: "A balanced review explaining what they hit or what critical elements they missed." },
+                strengths: { type: "array", items: { type: "string" }, description: "Specific accurate concepts they called out." },
+                gapsToFill: { type: "array", items: { type: "string" }, description: "Missing keywords, architectural concepts, or structural corrections needed." }
+            },
+            required: ["score", "verdict", "critique", "strengths", "gapsToFill"]
+        };
+
+        const result = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: responseSchema,
+            },
+        });
+
+        const textOut = extractRawText(result);
+        if (!textOut) throw new Error("Gemini returned an empty grading payload.");
+
+        return JSON.parse(textOut.trim());
+    } catch (error) {
+        handleAiError(error, "AI Service Error Grading Practice Response");
+    }
+}
+
+module.exports = { 
+    generateInterviewReport, 
+    generateTailoredResume,
+    generatePracticeQuestions, 
+    gradePracticeAnswer
+};

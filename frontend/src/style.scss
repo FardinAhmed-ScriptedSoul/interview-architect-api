@@ -1,20 +1,53 @@
-@import "./style/LoadingAnimation.scss";
-@import "./style/button.scss";
+@use "./style/LoadingAnimation.scss";
+@use "./style/button.scss";
+
 * {
-    margin: 0%;
-    padding: 0%;
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
 }
 
+// 1. Set the default Dark Mode state globally on html and body
 html,
 body,
 #root {
     width: 100%;
-    background-color: #161616;
-    color: whitesmoke;
+    min-height: 100vh; // Ensure it fills the screen dynamically
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.highlight{
+// Default Dark Mode Backgrounds
+body {
+    background-color: #161616;
+    color: whitesmoke;
+}
+
+#root {
+    background-color: transparent; // Let the body background color flow through!
+}
+
+// 2. Define the Light Mode overrides cleanly
+body.light-mode {
+    background-color: #f9fafb !important;
+    color: #111827 !important;
+
+    // Ensure all main layout cards and forms switch off pitch black
+    .interview-plan-container,
+    .form-section,
+    .card-panel,
+    div[class*="-container"],
+    div[class*="-card"] {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+    // Explicitly force text colors to dark inside light mode wrappers
+    h1, h2, h3, h4, p, span, label {
+        color: #111827 !important;
+    }
+}
+
+.highlight {
     color: #d20d3b;
 }

@@ -4,7 +4,7 @@
   "description": "An AI-powered system-engineered career acceleration platform built using Node.js, Express, React, MongoDB, and the Google Gemini AI Pro engine.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --runInBand --detectOpenHandles",
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
@@ -25,6 +25,7 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
+    "crypto": "^1.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
@@ -35,8 +36,13 @@
     "nodemon": "^3.1.14",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.18.0",
+    "puppeteer": "^25.0.4",
     "redis": "^5.12.1",
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }

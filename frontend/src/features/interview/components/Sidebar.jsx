@@ -1,94 +1,36 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuth } from '../../auth/hooks/useAuth'
-import './sidebar.scss'
+import React from 'react';
+import { useNavigate } from 'react-router';
+// Path updated to reflect the move to the centralized style folder
+import '../style/sidebar.scss'; 
 
 const Sidebar = ({ reports = [], onThemeToggle, isDark }) => {
-    const { user, handleLogout, handleLogoutAll } = useAuth()
-    const navigate = useNavigate()
-    const [profileOpen, setProfileOpen] = useState(false)
-    const [loggingOut, setLoggingOut] = useState(false)
-
-    const doLogout = async () => {
-        setLoggingOut(true)
-        await handleLogout()
-        navigate('/login')
-    }
-
-    const doLogoutAll = async () => {
-        setLoggingOut(true)
-        await handleLogoutAll()
-        navigate('/login')
-    }
-
-    const initials = user?.username
-        ? user.username.slice(0, 2).toUpperCase()
-        : user?.email?.slice(0, 2).toUpperCase() || '??'
-
-    const recentTwo = reports.slice(0, 2)
+    const navigate = useNavigate();
+    const recentTwo = reports.slice(0, 2);
 
     return (
         <aside className='sidebar'>
-            {/* Brand */}
-            <div className='sidebar__brand'>
+            {/* Brand Title Layout */}
+            <div className='sidebar__brand' onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
                 <span className='sidebar__brand-dot' />
                 Interview<span className='sidebar__brand-accent'>.</span>AI
             </div>
 
-            {/* Profile block */}
-            <div className='sidebar__profile' onClick={() => setProfileOpen(o => !o)}>
-                <div className='sidebar__avatar'>{initials}</div>
-                <div className='sidebar__user-info'>
-                    <p className='sidebar__username'>{user?.username || 'User'}</p>
-                    <p className='sidebar__email'>{user?.email || ''}</p>
-                </div>
-                <span className={`sidebar__chevron ${profileOpen ? 'sidebar__chevron--open' : ''}`}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>
-                </span>
-            </div>
-
-            {/* Profile dropdown */}
-            {profileOpen && (
-                <div className='sidebar__dropdown'>
-                    <button
-                        className='sidebar__dropdown-item'
-                        onClick={doLogout}
-                        disabled={loggingOut}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        {loggingOut ? 'Logging out...' : 'Logout'}
-                    </button>
-                    <button
-                        className='sidebar__dropdown-item sidebar__dropdown-item--danger'
-                        onClick={doLogoutAll}
-                        disabled={loggingOut}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Logout All Devices
-                    </button>
-                    <button
-                        className='sidebar__dropdown-item'
-                        onClick={() => navigate('/login')}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        Switch Account
-                    </button>
-                </div>
-            )}
-
             <div className='sidebar__divider' />
 
-            {/* Nav */}
+            {/* Core Navigation Controls */}
             <nav className='sidebar__nav'>
                 <button className='sidebar__nav-item sidebar__nav-item--active' onClick={() => navigate('/')}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
                     Home
                 </button>
             </nav>
 
             <div className='sidebar__divider' />
 
-            {/* Recent reports */}
+            {/* Recent Reports History Panels */}
             <div className='sidebar__section'>
                 <p className='sidebar__section-label'>Recent Reports</p>
                 {recentTwo.length === 0 && (
@@ -110,7 +52,7 @@ const Sidebar = ({ reports = [], onThemeToggle, isDark }) => {
 
             <div className='sidebar__spacer' />
 
-            {/* Theme toggle */}
+            {/* Interface Theme Toggle Option */}
             <button className='sidebar__theme-toggle' onClick={onThemeToggle}>
                 {isDark ? (
                     <>
@@ -125,7 +67,7 @@ const Sidebar = ({ reports = [], onThemeToggle, isDark }) => {
                 )}
             </button>
         </aside>
-    )
-}
+    );
+};
 
-export default Sidebar
+export default Sidebar;

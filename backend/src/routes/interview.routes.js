@@ -1,13 +1,34 @@
 const { Router } = require('express');
-const authMiddleware = require('../middlewares/auth.middleware');
+const authMiddleware = require('../middlewares/auth.middleware.js');
 const interviewController = require("../controllers/interview.controller.js");
 const upload = require("../middlewares/file.middleware.js");
-
-const interviewRouter = Router();
 const { processPdfUpload } = require('../middlewares/pdfUpload.middleware.js');
 
-// 🟢 Safely handle either direct function export or nested property export
+const interviewRouter = Router();
+
+// Handle either direct export structures or object nested property structures smoothly
 const verifyUser = authMiddleware.authMiddleware || authMiddleware;
+
+/**
+ * @route GET /api/interview/share/:interviewId
+ * @description Public view to access shared interview reports cleanly without bearer auth tokens
+ * @access Public (Controller verifies if isPublic is true)
+ */
+interviewRouter.get(
+    "/share/:interviewId",
+    interviewController.getPublicShareableReportController
+);
+
+/**
+ * @route PATCH /api/interview/:interviewId/visibility
+ * @description Protected route to flip isPublic state true/false on a report profile
+ * @access Private
+ */
+interviewRouter.patch(
+    "/:interviewId/visibility",
+    verifyUser,
+    interviewController.toggleReportVisibilityController
+);
 
 /**
  * @route POST /api/interview
@@ -19,7 +40,7 @@ interviewRouter.post(
     verifyUser,
     upload.single("resume"),
     processPdfUpload,
-    interviewController. generateInterviewReportController// 🟢 FIXED: Changed from getInterviewReportByIdController
+    interviewController.generateInterviewReportController
 );
 
 /**
@@ -30,18 +51,18 @@ interviewRouter.post(
 interviewRouter.get(
     "/report/:interviewId",
     verifyUser,
-    interviewController.getInterviewReportByIdController // 🟢 FIXED: Changed from getInterviewReport to match your real controller name
+    interviewController.getInterviewReportByIdController
 );
 
 /**
- * @route GET /api/interview/
+ * @route GET /api/interview
  * @description Get a list of all historical interview summaries for the logged-in user
  * @access Private
  */
 interviewRouter.get(
     "/",
     verifyUser,
-    interviewController.getAllInterviewOfAuserController // 🟢 This matches perfectly!
+    interviewController.getAllInterviewOfAuserController
 );
 
 /**
@@ -49,7 +70,6 @@ interviewRouter.get(
  * @description Tailor an ATS-optimized resume template from a report and stream back a binary PDF file attachment
  * @access Private
  */
-// 🟢 FIXED: Added the missing route your frontend calls to download tailored resume files
 interviewRouter.post(
     "/resume/pdf/:interviewReportId",
     verifyUser,

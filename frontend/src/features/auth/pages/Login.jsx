@@ -1,69 +1,95 @@
+// Login.jsx
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router' // Ensure this matches your package version
-import "../auth.form.scss" // 🟢 FIXED: Points directly to your services folder path
+import { useNavigate, Link } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
+import FloatingText from '../components/FloatingText'
 
 const Login = () => {
-    const { loading, handleLogin } = useAuth()
     const navigate = useNavigate()
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
 
-    const [ email, setEmail ] = useState("")
-    const [ password, setPassword ] = useState("")
-
+    // Consuming your real global auth interaction hook
+    const { loading, handleLogin } = useAuth()
+    
     const handleSubmit = async (e) => {
         e.preventDefault()
-        
-        if (!email.trim() || !password.trim()) {
-            alert("Please complete all required fields.");
-            return;
-        }
-
         try {
-            // 🟢 FIXED: Wait for successful confirmation. If it errors out, execution moves to catch block.
             await handleLogin({ email, password })
-            navigate('/')
+            navigate("/")
         } catch (err) {
-            // Error handled gracefully by hook, login page state remains intact
-            console.log("Navigation halted due to invalid session confirmation.")
+            console.error("Login component intercepted an execution error.", err)
         }
-    }
-
-    if (loading) {
-        return (<main className="loading-screen"><h1>Authenticating secure parameters.......</h1></main>)
     }
 
     return (
-        <main>
-            <div className="form-container">
-                <h1>Login</h1>
-                <form onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            value={email}
-                            onChange={(e) => { setEmail(e.target.value) }}
-                            type="email" 
-                            id="email" 
-                            name='email' 
-                            placeholder='Enter email address' 
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            value={password}
-                            onChange={(e) => { setPassword(e.target.value) }}
-                            type="password" 
-                            id="password" 
-                            name='password' 
-                            placeholder='Enter password' 
-                        />
-                    </div>
-                    <button type="submit" className='button primary-button'>Login</button>
-                </form>
-                <p>Don't have an account? <Link to={"/register"}>Register</Link></p>
-            </div>
-        </main>
+        <div className="auth-split-wrapper">
+            {/* Left Side: Smooth Slow-Motion Brand Banner */}
+            <FloatingText />
+
+            {/* Right Side: Interactive Forms Core Shell */}
+            <main>
+                <div className="form-container">
+                    <h1>Welcome Back</h1>
+                    <p>Enter your credentials to re-initialize your engineering simulator context.</p>
+
+                    <form onSubmit={handleSubmit}>
+                        <div className="input-group">
+                            <label htmlFor="email">Email Address</label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="name@domain.com"
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="button primary-button"
+                            disabled={loading}
+                        >
+                            {loading ? "Verifying Credentials..." : "Sign In"}
+                        </button>
+                    </form>
+
+                    {/* 💡 POSITIONED SECURELY BELOW SIGN IN BUTTON */}
+                    <p className="auth-helper-text" style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem', color: '#7d8590' }}>
+                        Can't recall the password?{' '}
+                        <Link 
+                            to="/forgot-password" 
+                            style={{ color: '#ff2d78', textDecoration: 'none', fontWeight: '500' }}
+                        >
+                            Reset it here
+                        </Link>
+                    </p>
+
+                    <div className="auth-divider" style={{ margin: '1.5rem 0' }} />
+
+                    <p className="auth-redirect">
+                        Don't have an account? <Link to="/register">Register</Link>
+                    </p>
+                </div>
+            </main>
+        </div>
     )
 }
 
