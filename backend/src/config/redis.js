@@ -1,21 +1,26 @@
 const { createClient } = require('redis');
-const config = require('./config');
+const config = require('./config.js'); // Imports your frozen config object
 
 let redisClient = null;
 
 if (config.redis.uri) {
-    redisClient = createClient({ url: config.redis.uri });
+    // Initialize standard redis driver client targeting the Upstash URI string
+    const client = createClient({ url: config.redis.uri });
 
-    redisClient.on('error', (err) => console.error('🔴 Redis Client Error:', err));
-    redisClient.on('connect', () => console.log('⚡ Redis Connected Successfully (RAM Engine Active)'));
+    client.on('error', (err) => console.error('🔴 Redis Client Runtime Error:', err.message));
+    client.on('connect', () => console.log('⚡ Redis Connected Successfully (Upstash RAM Engine Active)'));
 
-    // Connect asynchronously without blocking main server event loop
-    redisClient.connect().catch(() => {
-        console.warn('⚠️ Redis connection failed. Falling back to MongoDB storage engine safely.');
-        redisClient = null;
+    // Bind the global reference to the active connection handle
+    redisClient = client;
+
+    // Trigger non-blocking asynchronous socket handshake
+    client.connect().catch((err) => {
+        console.warn('⚠️ Redis connection failed:', err.message);
+        console.warn('⚙️ Falling back to MongoDB storage engine safely for Blacklist / OTP lookups.');
+        redisClient = null; // Wipe out reference on failure to redirect operational execution
     });
 } else {
-    console.log('ℹ️ No REDIS_URI provided. Blacklist management defaulting to MongoDB engine.');
+    console.log('ℹ️ No REDIS_URL provided. Session/Blacklist management defaulting to MongoDB engine.');
 }
 
 module.exports = redisClient;
